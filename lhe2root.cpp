@@ -63,7 +63,7 @@ struct Event {
 
 void print_usage() {
     cout << "Usage:\n"
-            "  lhetoroot <input.txt> [output.root]" << endl;
+            "  lhe2root <input.txt> [output.root]" << endl;
 }
 
 int main(int argc, char **argv) {
