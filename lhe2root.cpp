@@ -9,6 +9,7 @@
 
 #include "TTree.h"
 #include "TFile.h"
+#include "TLorentzVector.h"
 
 using namespace std;
 
@@ -37,6 +38,8 @@ struct Event {
     Float_t VTIMUP[MAXSIZE];
     Float_t SPINUP[MAXSIZE];
 
+    TLorentzVector *P4;
+
     void print() {
         cout <<   "  n_part  : " << NUP << "\n      ID  : " << IDPRUP << "\n  weight  : " << XWGTUP << "\n   scale  : " << SCALUP << "\n   a_QED  : " << AQEDUP << "\n   a_QCD  : " << AQCDUP << '\n';
         cout << "\n  PDG ID[]: "; for (int i = 0; i < NUP; i ++) cout << IDUP[i] << '\t';
@@ -56,7 +59,23 @@ struct Event {
     }
 
     void clear() {
+        TLorentzVector *tmp = P4;
         memset(this, 0, sizeof(Event));
+        P4 = tmp;
+    }
+
+    Event() {
+        P4 = new TLorentzVector[MAXSIZE];
+    }
+
+    ~Event() {
+        delete[] P4;
+    }
+
+    Event(const Event &r) {
+        memcpy(
+        P4 = new TLorentzVector[MAXSIZE];
+        P4
     }
 };
 
@@ -130,6 +149,7 @@ int main(int argc, char **argv) {
     t->Branch("mother_2", e.MOTHUP_2, "mother_2[n_part]/I");
     t->Branch("colour_1", e.ICOLUP_1, "colour_1[n_part]/I");
     t->Branch("colour_2", e.ICOLUP_2, "colour_2[n_part]/I");
+    t->Branch("p4", &e.P4, "p4[n_part]/TLorentzVector");
     t->Branch("px", e.PUP_1, "px[n_part]/F");
     t->Branch("py", e.PUP_2, "py[n_part]/F");
     t->Branch("pz", e.PUP_3, "pz[n_part]/F");
@@ -191,11 +211,11 @@ int main(int argc, char **argv) {
         }
 
         // Read optional particle data
-        // IDUP -- PDG ID
-        // ISTUP -- status (guessed: -1 for initial state, 1 for final state)
-        // MOTHUP -- mothers
-        // ICOLUP -- colours
-        // PUP -- 3-momentum(1-3), energy(4) and mass(5)
+        // IDUP   -- PDG ID
+        // ISTUP  -- status (guessed: -1 for initial state, 1 for final state)
+        // MOTHUP -- mothers(1-2)
+        // ICOLUP -- colours(1-2)
+        // PUP    -- 3-momentum(1-3), energy(4) and mass(5)
         // VTIMUP -- life time, may be not used
         // SPINUP -- spin (9 for unknown)
         for (int i = 0; i < e.NUP; i ++) {
@@ -204,6 +224,7 @@ int main(int argc, char **argv) {
             iss.str(line);
             iss >> e.IDUP[i] >> e.ISTUP[i] >> e.MOTHUP_1[i] >> e.MOTHUP_2[i] >> e.ICOLUP_1[i] >> e.ICOLUP_2[i];
             iss >> e.PUP_1[i] >> e.PUP_2[i] >> e.PUP_3[i] >> e.PUP_4[i] >> e.PUP_5[i] >> e.VTIMUP[i] >> e.SPINUP[i];
+            e.P4[i].SetPxPyPzE(e.PUP_1[i], e.PUP_2[i], e.PUP_3[i], e.PUP_4[i]);
         }
         t->Fill();
         c ++;
